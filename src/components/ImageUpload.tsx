@@ -15,7 +15,7 @@ export default function ImageUpload({ onDrop, isUploading }: ImageUploadProps) {
   });
 
   return (
-    <div className="p-3">
+    <div className="">
       <div
         {...getRootProps()}
         className={`
@@ -30,7 +30,7 @@ export default function ImageUpload({ onDrop, isUploading }: ImageUploadProps) {
         <input {...getInputProps()} />
         
         <div className="space-y-2">
-          <div className="w-6 h-6 mx-auto bg-gray-800 flex items-center justify-center">
+          <div className="w-6 h-6 mx-auto flex items-center justify-center">
             <img 
               src="/images/icons/icons8-drag-and-drop-100.png"
               alt="Upload icon"
@@ -42,7 +42,7 @@ export default function ImageUpload({ onDrop, isUploading }: ImageUploadProps) {
             <h3 className="text-xs font-bold text-white mb-1 tracking-wide">
               {isUploading ? 'UPLOADING...' : isDragActive ? 'DROP IMAGES HERE' : 'DRAG & DROP IMAGES'}
             </h3>
-            <p className="text-gray-400 text-xs">
+            <p className="text-white text-xs">
               {isUploading 
                 ? 'Processing files...'
                 : 'or click to browse files'

@@ -1,8 +1,8 @@
 [
   {
-    "id": "test-test",
-    "path": "E:\\test",
-    "name": "test",
+    "id": "civit-downloads-Civit Downloads",
+    "path": "E:\\Civit Downloads",
+    "name": "Civit Downloads",
     "enabled": true,
     "recursive": false,
     "extensions": [
@@ -13,6 +13,6 @@
       "bmp",
       "webp"
     ],
-    "lastScanned": "2025-08-04T16:14:04.176Z"
+    "lastScanned": "2025-08-04T16:41:42.100Z"
   }
 ]

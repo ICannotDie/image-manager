@@ -4,10 +4,11 @@ import ImageThumbnail from './ImageThumbnail';
 interface ImageGridProps {
   files: UploadedFile[];
   onDelete: (filename: string) => void;
+  onSimilaritySearch?: (filename: string) => void;
   isLoading: boolean;
 }
 
-export default function ImageGrid({ files, onDelete, isLoading }: ImageGridProps) {
+export default function ImageGrid({ files, onDelete, onSimilaritySearch, isLoading }: ImageGridProps) {
   if (isLoading) return null;
 
   return (
@@ -20,12 +21,13 @@ export default function ImageGrid({ files, onDelete, isLoading }: ImageGridProps
           No images uploaded yet
         </p>
       ) : (
-        <div className={`grid grid-cols-8 gap-1 ${files.length > 0 ? 'max-h-48 overflow-y-auto' : ''}`}>
+        <div className={`grid grid-cols-4 gap-2 ${files.length > 0 ? 'overflow-y-auto' : ''}`}>
           {files.map((file, index) => (
             <ImageThumbnail 
               key={index} 
               file={file} 
               onDelete={onDelete}
+              onSimilaritySearch={onSimilaritySearch}
             />
           ))}
         </div>
