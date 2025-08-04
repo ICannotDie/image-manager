@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+:root {
+    --background: #000000;
+    --foreground: #ffffff;
+    --accent: #00ff00;
+    --muted: #333333;
+    --border: #444444;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    color: var(--foreground);
+    background: var(--background);
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+    padding-left: 36px;
+    padding-right: 36px;
+}
+
+h1 {
+    margin: 0;
+}
+
+
+/* Custom scrollbar for the terminal aesthetic */
+
+::-webkit-scrollbar {
+    width: 16px;
+}
+
+::-webkit-scrollbar-track {
+    background: #000000;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #333333;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555555;
+}
