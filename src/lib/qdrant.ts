@@ -160,6 +160,49 @@ export async function deleteImageVector(id: string) {
   }
 }
 
+// Delete all image vectors for a specific directory
+export async function deleteImagesByDirectory(directoryPath: string) {
+  try {
+    console.log(`Searching for images in directory: ${directoryPath}`);
+    
+    // Use scroll to get all points and filter by directory path
+    const allPoints = await qdrantClient.scroll(IMAGE_COLLECTION_NAME, {
+      limit: 10000, // Adjust based on expected collection size
+      with_payload: true,
+      with_vector: false,
+    });
+
+    // Filter points that belong to the directory
+    const pointsToDelete = allPoints.points.filter(point => {
+      const payload = point.payload as any;
+      const filepath = payload.filepath || '';
+      // Check if the filepath starts with the directory path
+      return filepath.startsWith(directoryPath);
+    });
+
+    if (pointsToDelete.length === 0) {
+      console.log(`No images found in directory: ${directoryPath}`);
+      return { deletedCount: 0 };
+    }
+
+    // Extract point IDs for deletion
+    const pointIds = pointsToDelete.map(point => point.id);
+    
+    console.log(`Found ${pointIds.length} images to delete from directory: ${directoryPath}`);
+    
+    // Delete the points using the delete method
+    await qdrantClient.delete(IMAGE_COLLECTION_NAME, {
+      points: pointIds,
+    });
+
+    console.log(`Successfully deleted ${pointIds.length} images from directory: ${directoryPath}`);
+    return { deletedCount: pointIds.length };
+  } catch (error) {
+    console.error('Error deleting images by directory:', error);
+    throw error;
+  }
+}
+
 // Get all image vectors (for debugging)
 export async function getAllImageVectors(limit: number = 100) {
   try {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
+import { deleteImagesByDirectory } from '@/lib/qdrant';
 
 const CONFIG_FILE = join(process.cwd(), 'data', 'directories.json');
 
@@ -50,14 +51,27 @@ export async function DELETE(request: NextRequest) {
     }
     
     const deletedDirectory = configs[index];
+    
+    // Delete all Qdrant records for images in this directory
+    try {
+      console.log(`Deleting Qdrant records for directory: ${deletedDirectory.path}`);
+      const qdrantResult = await deleteImagesByDirectory(deletedDirectory.path);
+      console.log(`Deleted ${qdrantResult.deletedCount} Qdrant records for directory: ${deletedDirectory.path}`);
+    } catch (qdrantError) {
+      console.error('Error deleting Qdrant records:', qdrantError);
+      // Continue with directory removal even if Qdrant deletion fails
+    }
+    
+    // Remove the directory from configs
     configs.splice(index, 1);
     
     await saveDirectoryConfigs(configs);
     
     return NextResponse.json({
       success: true,
-      message: 'Directory deleted successfully',
-      deletedDirectory
+      message: 'Directory removed successfully',
+      deletedDirectory,
+      qdrantRecordsDeleted: true
     });
   } catch (error) {
     console.error('Error deleting directory:', error);

@@ -8,7 +8,13 @@ import { createReadStream } from 'fs';
 import { pipeline } from 'stream/promises';
 
 // Track ongoing scans
-const ongoingScans = new Map<string, { cancelled: boolean; startTime: number }>();
+const ongoingScans = new Map<string, { 
+  cancelled: boolean; 
+  startTime: number;
+  totalFiles: number;
+  currentFile: number;
+  currentFileName: string;
+}>();
 
 const CONFIG_FILE = join(process.cwd(), 'data', 'directories.json');
 
@@ -37,16 +43,16 @@ async function saveDirectoryConfigs(configs: any[]) {
 
 // Note: generateImageEmbedding is now imported from @/lib/embeddingGenerator
 
-// Check if image exists in Qdrant
-async function imageExistsInQdrant(imageId: string): Promise<boolean> {
+// Check if image exists in Qdrant by filepath
+async function imageExistsInQdrant(filepath: string): Promise<boolean> {
   try {
     const { qdrantClient, IMAGE_COLLECTION_NAME } = await import('@/lib/qdrant');
     const results = await qdrantClient.scroll(IMAGE_COLLECTION_NAME, {
       filter: {
         must: [
           {
-            key: 'id',
-            match: { value: imageId }
+            key: 'filepath',
+            match: { value: filepath }
           }
         ]
       },
@@ -57,6 +63,42 @@ async function imageExistsInQdrant(imageId: string): Promise<boolean> {
     console.error('Error checking if image exists in Qdrant:', error);
     // If Qdrant is not available, assume image doesn't exist
     return false;
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const directoryId = searchParams.get('directoryId');
+    
+    if (!directoryId) {
+      return NextResponse.json(
+        { error: 'Directory ID is required' },
+        { status: 400 }
+      );
+    }
+    
+    const scanInfo = ongoingScans.get(directoryId);
+    if (!scanInfo) {
+      return NextResponse.json(
+        { error: 'No scan in progress for this directory' },
+        { status: 404 }
+      );
+    }
+    
+    return NextResponse.json({
+      cancelled: scanInfo.cancelled,
+      totalFiles: scanInfo.totalFiles,
+      currentFile: scanInfo.currentFile,
+      currentFileName: scanInfo.currentFileName,
+      progress: scanInfo.totalFiles > 0 ? Math.round((scanInfo.currentFile / scanInfo.totalFiles) * 100) : 0
+    });
+  } catch (error) {
+    console.error('Error getting scan progress:', error);
+    return NextResponse.json(
+      { error: 'Failed to get scan progress' },
+      { status: 500 }
+    );
   }
 }
 
@@ -86,7 +128,13 @@ export async function POST(request: NextRequest) {
       }
 
       // Register this scan
-      ongoingScans.set(directoryId, { cancelled: false, startTime: Date.now() });
+      ongoingScans.set(directoryId, { 
+        cancelled: false, 
+        startTime: Date.now(),
+        totalFiles: 0,
+        currentFile: 0,
+        currentFileName: ''
+      });
 
       // Initialize Qdrant collection
       try {
@@ -105,12 +153,25 @@ export async function POST(request: NextRequest) {
       console.log(`Found ${images.length} images in directory: ${directory.path}`);
       console.log('Images found:', images.map(img => ({ filename: img.filename, filepath: img.filepath })));
       
+      // Update scan info with total files and initial progress
+      const scanInfo = ongoingScans.get(directoryId);
+      if (scanInfo) {
+        scanInfo.totalFiles = images.length;
+        scanInfo.currentFile = 0;
+        scanInfo.currentFileName = 'Starting scan...';
+        ongoingScans.set(directoryId, scanInfo);
+      }
+      
       let processedCount = 0;
       let addedCount = 0;
       let skippedCount = 0;
       let errorCount = 0;
 
-      for (const image of images) {
+      // Small delay to ensure initial progress is visible
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      for (let i = 0; i < images.length; i++) {
+        const image = images[i];
         try {
           // Check if scan has been cancelled
           const scanInfo = ongoingScans.get(directoryId);
@@ -119,11 +180,18 @@ export async function POST(request: NextRequest) {
             break;
           }
 
-          console.log(`Processing image: ${image.filename}`);
+          // Update progress
+          if (scanInfo) {
+            scanInfo.currentFile = i + 1;
+            scanInfo.currentFileName = image.filename;
+            ongoingScans.set(directoryId, scanInfo);
+          }
+
+          console.log(`Processing image: ${image.filename} (${i + 1} of ${images.length})`);
           
-          // Check if image already exists in Qdrant
-          const exists = await imageExistsInQdrant(image.id);
-          console.log(`Image ${image.filename} exists in Qdrant: ${exists}`);
+                     // Check if image already exists in Qdrant
+           const exists = await imageExistsInQdrant(image.filepath);
+           console.log(`Image ${image.filename} exists in Qdrant: ${exists}`);
           
           if (!exists) {
             try {
@@ -195,11 +263,12 @@ export async function POST(request: NextRequest) {
         await saveDirectoryConfigs(configs);
       }
 
-      // Clean up scan tracking
-      ongoingScans.delete(directoryId);
-
-      const scanInfo = ongoingScans.get(directoryId);
-      const wasCancelled = scanInfo && scanInfo.cancelled;
+             // Get cancellation status before cleanup
+       const finalScanInfo = ongoingScans.get(directoryId);
+       const wasCancelled = finalScanInfo && finalScanInfo.cancelled;
+       
+       // Clean up scan tracking
+       ongoingScans.delete(directoryId);
 
       return NextResponse.json({
         success: true,

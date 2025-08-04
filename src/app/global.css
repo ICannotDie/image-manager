@@ -351,6 +351,18 @@
     .bg-blue-700 {
         background-color: #1d4ed8;
     }
+    .bg-green-600 {
+        background-color: #16a34a;
+    }
+    .bg-green-700 {
+        background-color: #15803d;
+    }
+    .bg-orange-600 {
+        background-color: #ea580c;
+    }
+    .bg-orange-700 {
+        background-color: #c2410c;
+    }
     .text-white {
         color: #fff;
     }
@@ -501,6 +513,10 @@
     .break-words {
         overflow-wrap: break-word;
     }
+    /* Box sizing utilities */
+    .box-border {
+        box-sizing: border-box;
+    }
     /* Transition utilities */
     .transition-all {
         transition-property: all;
@@ -527,8 +543,17 @@
     .hover\:bg-blue-700:hover {
         background-color: #1d4ed8;
     }
+    .hover\:bg-green-700:hover {
+        background-color: #15803d;
+    }
+    .hover\:bg-orange-700:hover {
+        background-color: #c2410c;
+    }
     .hover\:bg-gray-600:hover {
         background-color: #4b5563;
+    }
+    .hover\:bg-gray-700:hover {
+        background-color: #374151;
     }
     /* Group hover utilities */
     .group:hover .group-hover\:opacity-100 {
