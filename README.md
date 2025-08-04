@@ -12,6 +12,10 @@ A local image vector search application built with Next.js, TypeScript, and Tail
 - 🔄 **Duplicate Prevention** - Automatically skips duplicate files
 - 📊 **File Information** - Shows filename and file size for each image
 - ⚡ **Real-time Updates** - Instant feedback for upload and delete operations
+- 📁 **Directory Management** - Add and manage directories to scan for images
+- 🔍 **Directory Scanning** - Scan directories to find and index images
+- 🧠 **Vector Search** - Store images with embeddings for similarity search
+- 📈 **Scan Progress** - Real-time feedback during directory scanning
 
 ## Getting Started
 
@@ -97,14 +101,20 @@ The application is built with a modular component structure:
 - `GET /api/images` - List all uploaded images
 - `POST /api/upload` - Upload new images
 - `DELETE /api/images/delete` - Delete an image
+- `GET /api/directories` - List all directory configurations
+- `POST /api/directories` - Add or update directory configuration
+- `DELETE /api/directories/delete` - Delete a directory configuration
+- `POST /api/directories/scan` - Start/stop scanning a directory for images
 
 ## Next Steps
 
 Future enhancements could include:
 
-1. **Vector Search** - Implement image similarity search
+1. **Real Vision Models** - Replace placeholder embeddings with actual vision models (CLIP, ResNet, etc.)
 2. **Image Processing** - Add filters, cropping, and editing
 3. **User Authentication** - Multi-user support
 4. **Database Integration** - Persistent storage
 5. **Advanced Search** - Text-based image search
 6. **Image Metadata** - EXIF data extraction and display
+7. **Background Jobs** - Implement proper background scanning for large directories
+8. **Search Interface** - Add UI for searching similar images
