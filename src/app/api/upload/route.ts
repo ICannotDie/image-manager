@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { writeFile, mkdir, access } from 'fs/promises';
 import { join } from 'path';
+import { generateImageEmbedding } from '@/lib/embeddingGenerator';
+import { storeImageVector } from '@/lib/qdrant';
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,6 +53,26 @@ export async function POST(request: NextRequest) {
       const buffer = Buffer.from(bytes);
       
       await writeFile(filepath, buffer);
+      
+      // Generate embedding for the uploaded image
+      try {
+        console.log(`Generating embedding for uploaded image: ${filename}`);
+        const embedding = await generateImageEmbedding(filepath);
+        
+        // Store the embedding in Qdrant
+        await storeImageVector(filename, embedding, {
+          filename: filename,
+          filepath: filepath,
+          uploadDate: new Date().toISOString(),
+          size: file.size,
+          type: file.type
+        });
+        
+        console.log(`Successfully stored embedding for: ${filename}`);
+      } catch (embeddingError) {
+        console.error(`Error generating embedding for ${filename}:`, embeddingError);
+        // Continue with upload even if embedding fails
+      }
       
       savedFiles.push({
         originalName: file.name,

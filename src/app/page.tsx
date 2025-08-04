@@ -1,6 +1,7 @@
 "use client";
 
 import { Header, Toast, ImageUpload, ImageGrid, useImageUpload } from "../components";
+import EmbeddingTest from "../components/EmbeddingTest";
 
 export default function Home() {
   const {
@@ -34,6 +35,11 @@ export default function Home() {
             onDelete={deleteImage}
             isLoading={isLoading}
           />
+
+          {/* Embedding Test Component */}
+          <div className="mt-8">
+            <EmbeddingTest />
+          </div>
         </div>
       </div>
     </div>

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { scanDirectory, DirectoryConfig } from '@/lib/directoryScanner';
 import { storeImageVector, initializeCollection } from '@/lib/qdrant';
+import { generateImageEmbedding } from '@/lib/embeddingGenerator';
 import { readFile, writeFile } from 'fs/promises';
 import { join } from 'path';
 import { createReadStream } from 'fs';
 import { pipeline } from 'stream/promises';
-import { createHash } from 'crypto';
 
 // Track ongoing scans
 const ongoingScans = new Map<string, { cancelled: boolean; startTime: number }>();
@@ -35,35 +35,7 @@ async function saveDirectoryConfigs(configs: any[]) {
   }
 }
 
-// Generate embedding for image (placeholder - you'll need to implement actual embedding)
-async function generateImageEmbedding(imagePath: string): Promise<number[]> {
-  // This is a placeholder implementation
-  // In a real implementation, you would:
-  // 1. Load the image using a library like sharp or jimp
-  // 2. Preprocess it (resize to standard size, normalize pixel values)
-  // 3. Use a vision model like CLIP, ResNet, or a custom model
-  // 4. Return the embedding vector
-  
-  // For now, we'll create a more sophisticated hash-based "embedding"
-  // that takes into account file size and modification time for better uniqueness
-  const { stat } = await import('fs/promises');
-  const stats = await stat(imagePath);
-  
-  // Create a more unique hash based on path, size, and modification time
-  const hashInput = `${imagePath}-${stats.size}-${stats.mtime.getTime()}`;
-  const hash = createHash('sha256').update(hashInput).digest('hex');
-  const vector = new Array(384).fill(0);
-  
-  // Convert hash to numbers and fill the vector with normalized values
-  for (let i = 0; i < vector.length; i++) {
-    const hashIndex = i % hash.length;
-    const hashValue = parseInt(hash[hashIndex], 16);
-    // Normalize to values between -1 and 1 (typical for cosine similarity)
-    vector[i] = (hashValue / 15) * 2 - 1;
-  }
-  
-  return vector;
-}
+// Note: generateImageEmbedding is now imported from @/lib/embeddingGenerator
 
 // Check if image exists in Qdrant
 async function imageExistsInQdrant(imageId: string): Promise<boolean> {
@@ -172,8 +144,8 @@ export async function POST(request: NextRequest) {
               console.log(`Embedding generated, length: ${embedding.length}`);
               
               // Validate embedding
-              if (!Array.isArray(embedding) || embedding.length !== 384) {
-                throw new Error(`Invalid embedding: expected array of length 384, got ${Array.isArray(embedding) ? embedding.length : typeof embedding}`);
+              if (!Array.isArray(embedding) || embedding.length !== 1000) {
+                throw new Error(`Invalid embedding: expected array of length 1000, got ${Array.isArray(embedding) ? embedding.length : typeof embedding}`);
               }
               
               // Check for NaN or infinite values

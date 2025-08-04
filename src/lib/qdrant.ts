@@ -8,9 +8,10 @@ export const qdrantClient = new QdrantClient({
 // Collection name for storing image vectors
 export const IMAGE_COLLECTION_NAME = 'images';
 
-// Vector size (this will depend on your embedding model)
-// Common sizes: 384 (sentence-transformers), 768 (BERT), 1536 (OpenAI text-embedding-ada-002)
-export const VECTOR_SIZE = 384;
+// Vector size for ResNet50 embeddings
+// The actual size will be determined by the model output
+// ResNet50 typically outputs 1000-dimensional vectors (ImageNet classes) or 2048 (penultimate layer)
+export const VECTOR_SIZE = 1000; // Updated to match actual model output
 
 // Initialize the collection if it doesn't exist
 export async function initializeCollection() {
